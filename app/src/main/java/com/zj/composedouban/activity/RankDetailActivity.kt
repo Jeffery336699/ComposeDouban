@@ -13,6 +13,9 @@ import com.zj.composedouban.ui.theme.ComposeDoubanTheme
 
 class RankDetailActivity : ComponentActivity() {
     companion object {
+        /**
+         * 路由的管理直接采用Activity传统的方式，新的页面以Activity作为载体，并没有引入Navigation导航那一套，是一种简化的处理
+         */
         fun navigate(context: Context) {
             val intent = Intent(context, RankDetailActivity::class.java)
             context.startActivity(intent)

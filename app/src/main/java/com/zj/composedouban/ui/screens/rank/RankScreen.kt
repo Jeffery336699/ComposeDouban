@@ -27,15 +27,27 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowInsetsCompat
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import coil.request.ImageRequest
+import com.android.internal.R.attr.contentDescription
 import com.google.accompanist.coil.rememberCoilPainter
+import com.google.accompanist.insets.LocalWindowInsets
+import com.google.accompanist.insets.WindowInsets
 import com.google.accompanist.insets.statusBarsHeight
 import com.zj.composedouban.R
 import com.zj.composedouban.data.RankDetail
 import com.zj.composedouban.data.rankDetailList
+import com.zj.composedouban.util.customBorder
 import com.zj.composedouban.viewmodel.RankViewModel
+
+/**
+ * 单位都是dp
+ */
+const val RankTopItemHeight = 300
+const val ToolbarHeight = 44
 
 @Composable
 fun RankScreen(viewModel: RankViewModel = RankViewModel()) {
@@ -57,13 +69,25 @@ fun RankScreen(viewModel: RankViewModel = RankViewModel()) {
                     is LoadState.Loading -> {
                         item { LoadingItem() }
                     }
+
                     else -> {
+                        if (loadState.append.endOfPaginationReached) {
+                            item {
+                                Text(
+                                    text = "没有更多数据了",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .wrapContentSize().customBorder()
+                                )
+                            }
+                        }
                     }
                 }
             }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            // item {
+            //     Spacer(modifier = Modifier.height(16.dp))
+            // }
         }
         RankHeader(scrollState)
     }
@@ -76,20 +100,23 @@ fun LoadingItem() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            // Optimize: 这是以内容水平居中，而非上面的fillMaxWidth，666
             .wrapContentWidth(Alignment.CenterHorizontally)
     )
 }
 
 @Composable
 fun RankHeader(scrollState: LazyListState) {
+    val insets = LocalWindowInsets.current
     val target = LocalDensity.current.run {
-        200.dp.toPx()
+        (RankTopItemHeight-ToolbarHeight).dp.toPx()-insets.statusBars.top
     }
     val scrollPercent: Float = if (scrollState.firstVisibleItemIndex > 0) {
         1f
     } else {
-        scrollState.firstVisibleItemScrollOffset / target
+        (scrollState.firstVisibleItemScrollOffset / target).coerceIn(0f, 1f)
     }
+    println("statusBarsHeight:${insets.statusBars.top} px , scrollPercent: $scrollPercent")
     val activity = LocalContext.current as Activity
     val backgroundColor = Color(0xFF7F6351)
     Column() {
@@ -99,8 +126,9 @@ fun RankHeader(scrollState: LazyListState) {
                 .statusBarsHeight()
                 .alpha(scrollPercent)
                 .background(backgroundColor)
+                .customBorder()
         )
-        Box(modifier = Modifier.height(44.dp)) {
+        Box(modifier = Modifier.height(ToolbarHeight.dp)) {
             Spacer(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,7 +140,7 @@ fun RankHeader(scrollState: LazyListState) {
                     painter = painterResource(id = R.mipmap.icon_back),
                     contentDescription = "back",
                     modifier = Modifier
-                        .size(52.dp, 44.dp)
+                        .size(52.dp, ToolbarHeight.dp)
                         .padding(16.dp, 12.dp, 8.dp, 12.dp)
                         .clickable {
                             activity.finish()
@@ -135,10 +163,10 @@ fun RankTopItem() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(RankTopItemHeight.dp)
     ) {
         Image(
-            painter = rememberCoilPainter(request = "https://img3.doubanio.com/view/photo/l/public/p456482220.webp"),
+            painter = rememberCoilPainter(request = "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p480747492.jpg"),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -193,7 +221,13 @@ fun RankListItem(item: RankDetail) {
     ) {
         Row() {
             Image(
-                painter = rememberCoilPainter(request = item.imgOne),
+                painter = rememberCoilPainter(
+                    request = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imgOne)
+                        .placeholder(R.drawable.fail) // 加载中占位图
+                        .error(R.drawable.fail) // 加载失败占位图
+                        .build()
+                ),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -202,7 +236,13 @@ fun RankListItem(item: RankDetail) {
                     .clip(RoundedCornerShape(10.dp))
             )
             Image(
-                painter = rememberCoilPainter(request = item.imgTwo),
+                painter = rememberCoilPainter(
+                    request = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imgTwo)
+                        .placeholder(R.drawable.faillong) // 加载中占位图
+                        .error(R.drawable.faillong) // 加载失败占位图
+                        .build()
+                ),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

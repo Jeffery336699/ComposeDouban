@@ -99,7 +99,8 @@ fun TopRankItem(item: HomeTopRank) {
                 .fillMaxSize()
                 .background(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color(item.startColor), Color(item.endColor)),
+                        colors = listOf(Color(item.startColor), Color(item.endColor)/*Color.Black,Color.White*/),
+                        // Optimize: 采用从左上到右下的渐变色
                         start = Offset(0f, Float.POSITIVE_INFINITY),
                         end = Offset(Float.POSITIVE_INFINITY, 0f)
                     )
@@ -126,6 +127,7 @@ fun TopRankItem(item: HomeTopRank) {
                     text = it.score,
                     color = Color(0xffffac2d),
                     style = MaterialTheme.typography.overline,
+                    // 先padding的方式相当于View的margin
                     modifier = Modifier.padding(12.dp, 0.dp, 0.dp, 2.dp)
                 )
             }
